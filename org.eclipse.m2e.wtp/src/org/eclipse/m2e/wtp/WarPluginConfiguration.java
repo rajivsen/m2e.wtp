@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008-2015 Sonatype, Inc. and others.
+ * Copyright (c) 2008-2018 Sonatype, Inc. and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,8 +69,12 @@ public class WarPluginConfiguration extends AbstractFilteringSupportMavenPlugin 
   private static final String WEB_XML = "WEB-INF/web.xml"; //$NON-NLS-1$
 
   private static final int WEB_3_1_ID = 31;
+  
+  private static final int WEB_4_0_ID = 40;
 
   private static final String WEB_3_1_TEXT = "3.1"; //$NON-NLS-1$
+  
+  private static final String WEB_4_0_TEXT = "4.0"; //$NON-NLS-1$
   
   private static final String FAIL_ON_MISSING_WEB_XML = "failOnMissingWebXml";
   
@@ -79,6 +83,10 @@ public class WarPluginConfiguration extends AbstractFilteringSupportMavenPlugin 
   private static final IProjectFacetVersion WEB_31 = WebFacetUtils.WEB_FACET.hasVersion(WEB_3_1_TEXT)?
                                                               WebFacetUtils.WEB_FACET.getVersion(WEB_3_1_TEXT)
                                                              :WebFacetUtils.WEB_30;
+                                                              
+  private static final IProjectFacetVersion WEB_40 = WebFacetUtils.WEB_FACET.hasVersion(WEB_4_0_TEXT)?
+                                                                      WebFacetUtils.WEB_FACET.getVersion(WEB_4_0_TEXT)
+                                                                     :WebFacetUtils.WEB_30;
   
   private boolean defaultFailOnMissingWebXml = true; 
   
@@ -248,6 +256,8 @@ public String[] getSourceIncludes() {
               return WebFacetUtils.WEB_30;
             case WEB_3_1_ID:
               return WEB_31;
+            case WEB_4_0_ID:
+                return WEB_40;
           }
         } finally {
           is.close();
@@ -258,7 +268,12 @@ public String[] getSourceIncludes() {
         // expected
       }
     }
-   
+    
+    //If no web.xml found and the project depends on some java EE 8 jar, then set web facet to 4.0
+    if (WTPProjectsUtil.hasInClassPath(project, "javax.servlet.http.HttpServletMapping")) { //$NON-NLS-1$
+      return WEB_40;
+    }
+    
     //If no web.xml found and the project depends on some java EE 7 jar, then set web facet to 3.1
     if (WTPProjectsUtil.hasInClassPath(project, "javax.servlet.http.WebConnection")) { //$NON-NLS-1$
       return WEB_31;
